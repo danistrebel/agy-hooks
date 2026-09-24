@@ -1,4 +1,4 @@
-# Antigravity Hooks Experiment (`agy-hooks`)
+# Antigravity Hooks Experiment
 
 This repository demonstrates how to build and configure custom lifecycle hooks for Google Antigravity (`agy`). It provides 3 streamlined hooks: **Log**, **Trace**, and **Metrics**.
 
@@ -19,14 +19,14 @@ Hooks receive execution context as JSON via `stdin` and return execution control
 
 ## Quickstart
 
-### Run Locally (Zero Cloud Dependencies)
+### Run Locally
 By default, all hooks run locally without requiring GCP credentials or network access. Local telemetry and timeline visualizations are stored in [`.agy-local-telemetry/`](.agy-local-telemetry/):
 
 ```bash
 agy
 ```
 
-### Run Remotely / With Google Cloud Telemetry
+### Send Telemetry to Google Cloud
 To run `agy` with full Google Cloud telemetry enabled (forwarding to **Google Cloud Logging**, **Google Cloud Trace**, and **Google Cloud Monitoring**):
 
 ```bash
@@ -52,6 +52,38 @@ agy
 │   ├── hooks_<conversationId>.jsonl
 │   └── timeline_<conversationId>.txt
 └── README.md
+```
+
+---
+
+## Hook Registration (`.agents/hooks.json`)
+
+The hooks are registered under [`.agents/hooks.json`](.agents/hooks.json) as standard command-type hooks. Each hook invokes its respective Python script with the lifecycle event name as an argument:
+
+```json
+{
+  "Log": {
+    "enabled": true,
+    "PreToolUse": [{ "matcher": "*", "hooks": [{ "type": "command", "command": "./log_hook.py PreToolUse", "timeout": 15 }] }],
+    "PostToolUse": [{ "matcher": "*", "hooks": [{ "type": "command", "command": "./log_hook.py PostToolUse", "timeout": 15 }] }],
+    "PreInvocation": [{ "type": "command", "command": "./log_hook.py PreInvocation", "timeout": 15 }],
+    "PostInvocation": [{ "type": "command", "command": "./log_hook.py PostInvocation", "timeout": 15 }],
+    "Stop": [{ "type": "command", "command": "./log_hook.py Stop", "timeout": 15 }]
+  },
+  "Trace": {
+    "enabled": true,
+    "PreInvocation": [{ "type": "command", "command": "./trace_hook.py PreInvocation", "timeout": 15 }],
+    "PreToolUse": [{ "matcher": "*", "hooks": [{ "type": "command", "command": "./trace_hook.py PreToolUse", "timeout": 15 }] }],
+    "PostToolUse": [{ "matcher": "*", "hooks": [{ "type": "command", "command": "./trace_hook.py PostToolUse", "timeout": 15 }] }],
+    "PostInvocation": [{ "type": "command", "command": "./trace_hook.py PostInvocation", "timeout": 15 }],
+    "Stop": [{ "type": "command", "command": "./trace_hook.py Stop", "timeout": 15 }]
+  },
+  "Metrics": {
+    "enabled": true,
+    "PostToolUse": [{ "matcher": "*", "hooks": [{ "type": "command", "command": "./metrics_hook.py PostToolUse", "timeout": 15 }] }],
+    "PostInvocation": [{ "type": "command", "command": "./metrics_hook.py PostInvocation", "timeout": 15 }]
+  }
+}
 ```
 
 ---
@@ -163,34 +195,4 @@ gcloud projects add-iam-policy-binding "${PROJECT_ID}" \
     --role="roles/monitoring.metricWriter"
 ```
 
----
 
-## Hook Registration (`.agents/hooks.json`)
-
-The hooks are registered under [`.agents/hooks.json`](.agents/hooks.json) as standard command-type hooks. Each hook invokes its respective Python script with the lifecycle event name as an argument:
-
-```json
-{
-  "Log": {
-    "enabled": true,
-    "PreToolUse": [{ "matcher": "*", "hooks": [{ "type": "command", "command": "./log_hook.py PreToolUse", "timeout": 15 }] }],
-    "PostToolUse": [{ "matcher": "*", "hooks": [{ "type": "command", "command": "./log_hook.py PostToolUse", "timeout": 15 }] }],
-    "PreInvocation": [{ "type": "command", "command": "./log_hook.py PreInvocation", "timeout": 15 }],
-    "PostInvocation": [{ "type": "command", "command": "./log_hook.py PostInvocation", "timeout": 15 }],
-    "Stop": [{ "type": "command", "command": "./log_hook.py Stop", "timeout": 15 }]
-  },
-  "Trace": {
-    "enabled": true,
-    "PreInvocation": [{ "type": "command", "command": "./trace_hook.py PreInvocation", "timeout": 15 }],
-    "PreToolUse": [{ "matcher": "*", "hooks": [{ "type": "command", "command": "./trace_hook.py PreToolUse", "timeout": 15 }] }],
-    "PostToolUse": [{ "matcher": "*", "hooks": [{ "type": "command", "command": "./trace_hook.py PostToolUse", "timeout": 15 }] }],
-    "PostInvocation": [{ "type": "command", "command": "./trace_hook.py PostInvocation", "timeout": 15 }],
-    "Stop": [{ "type": "command", "command": "./trace_hook.py Stop", "timeout": 15 }]
-  },
-  "Metrics": {
-    "enabled": true,
-    "PostToolUse": [{ "matcher": "*", "hooks": [{ "type": "command", "command": "./metrics_hook.py PostToolUse", "timeout": 15 }] }],
-    "PostInvocation": [{ "type": "command", "command": "./metrics_hook.py PostInvocation", "timeout": 15 }]
-  }
-}
-```
