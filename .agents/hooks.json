@@ -1,6 +1,6 @@
 {
   "Log": {
-    "enabled": false,
+    "enabled": true,
     "PreToolUse": [
       {
         "matcher": "*",
@@ -96,7 +96,7 @@
     ]
   },
   "Metrics": {
-    "enabled": false,
+    "enabled": true,
     "PostToolUse": [
       {
         "matcher": "*",
